@@ -1,1 +1,240 @@
+#include <iostream>
+#include <limits>
+#include <cstdlib>
 
+using namespace std;
+
+// Constantes del juego
+const int TAMANIO = 3;
+const char JUGADOR_X = 'X';
+const char JUGADOR_O = 'O';
+const char VACIO = ' ';
+
+// Función para inicializar el tablero vacío
+void inicializarTablero(char tablero[TAMANIO][TAMANIO]) {
+    for (int i = 0; i < TAMANIO; i++) {
+        for (int j = 0; j < TAMANIO; j++) {
+            tablero[i][j] = VACIO;
+        }
+    }
+}
+
+// Función para mostrar el tablero en pantalla
+void mostrarTablero(char tablero[TAMANIO][TAMANIO]) {
+    cout << "\n   1   2   3\n";
+    for (int i = 0; i < TAMANIO; i++) {
+        cout << i + 1 << " ";
+        for (int j = 0; j < TAMANIO; j++) {
+            cout << " " << tablero[i][j] << " ";
+            if (j < TAMANIO - 1) cout << "|";
+        }
+        cout << endl;
+        if (i < TAMANIO - 1) {
+            cout << "  -----------\n";
+        }
+    }
+    cout << endl;
+}
+
+// Función para validar si una jugada es válida
+bool esJugadaValida(char tablero[TAMANIO][TAMANIO], int fila, int columna) {
+    // Verificar si está dentro de los límites
+    if (fila < 0 || fila >= TAMANIO || columna < 0 || columna >= TAMANIO) {
+        return false;
+    }
+    // Verificar si la casilla está vacía
+    return tablero[fila][columna] == VACIO;
+}
+
+// Función para verificar si hay un ganador en una línea
+bool verificarLinea(char a, char b, char c, char jugador) {
+    return (a == jugador && b == jugador && c == jugador);
+}
+
+// Función para verificar si hay un ganador
+bool hayGanador(char tablero[TAMANIO][TAMANIO], char jugador) {
+    // Verificar filas
+    for (int i = 0; i < TAMANIO; i++) {
+        if (verificarLinea(tablero[i][0], tablero[i][1], tablero[i][2], jugador)) {
+            return true;
+        }
+    }
+    
+    // Verificar columnas
+    for (int j = 0; j < TAMANIO; j++) {
+        if (verificarLinea(tablero[0][j], tablero[1][j], tablero[2][j], jugador)) {
+            return true;
+        }
+    }
+    
+    // Verificar diagonal principal
+    if (verificarLinea(tablero[0][0], tablero[1][1], tablero[2][2], jugador)) {
+        return true;
+    }
+    
+    // Verificar diagonal secundaria
+    if (verificarLinea(tablero[0][2], tablero[1][1], tablero[2][0], jugador)) {
+        return true;
+    }
+    
+    return false;
+}
+
+// Función para verificar si el tablero está lleno (empate)
+bool tableroLleno(char tablero[TAMANIO][TAMANIO]) {
+    for (int i = 0; i < TAMANIO; i++) {
+        for (int j = 0; j < TAMANIO; j++) {
+            if (tablero[i][j] == VACIO) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Función para realizar una jugada
+void realizarJugada(char tablero[TAMANIO][TAMANIO], int fila, int columna, char jugador) {
+    tablero[fila][columna] = jugador;
+}
+
+// Función para obtener entrada válida del usuario
+void obtenerJugada(char tablero[TAMANIO][TAMANIO], int &fila, int &columna, char jugador) {
+    bool jugadaValida = false;
+    
+    while (!jugadaValida) {
+        cout << "Jugador " << jugador << ", ingresa tu jugada (fila columna): ";
+        
+        // Validar que la entrada sea numérica
+        if (!(cin >> fila >> columna)) {
+            cout << "Error: Debes ingresar números. Intenta de nuevo.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        
+        // Convertir a índices de arreglo (0-2)
+        fila--;
+        columna--;
+        
+        // Validar la jugada
+        if (esJugadaValida(tablero, fila, columna)) {
+            jugadaValida = true;
+        } else {
+            cout << "Jugada inválida. Intenta de nuevo.\n";
+        }
+    }
+}
+
+// Función para la jugada de la CPU (modo fácil - aleatorio)
+void jugadaCPU(char tablero[TAMANIO][TAMANIO], int &fila, int &columna) {
+    cout << "Turno de la CPU...\n";
+    
+    // Buscar casilla vacía aleatoriamente
+    do {
+        fila = rand() % TAMANIO;
+        columna = rand() % TAMANIO;
+    } while (!esJugadaValida(tablero, fila, columna));
+    
+    cout << "CPU juega en: " << (fila + 1) << " " << (columna + 1) << endl;
+}
+
+// Función para mostrar el menú principal
+int mostrarMenu() {
+    int opcion;
+    cout << "\n=================================\n";
+    cout << "    JUEGO DEL GATO (TIC-TAC-TOE)\n";
+    cout << "=================================\n";
+    cout << "1. Jugar (2 jugadores)\n";
+    cout << "2. Jugar contra CPU\n";
+    cout << "3. Salir\n";
+    cout << "Selecciona una opción: ";
+    cin >> opcion;
+    return opcion;
+}
+
+// Función para jugar una partida completa
+void jugarPartida(bool contraCPU) {
+    char tablero[TAMANIO][TAMANIO];
+    char jugadorActual = JUGADOR_X;
+    bool juegoTerminado = false;
+    int fila, columna;
+    
+    inicializarTablero(tablero);
+    
+    cout << "\n¡Comienza el juego!\n";
+    if (contraCPU) {
+        cout << "Tú eres X, la CPU es O\n";
+    } else {
+        cout << "Jugador 1: X, Jugador 2: O\n";
+    }
+    
+    // Ciclo principal del juego
+    while (!juegoTerminado) {
+        mostrarTablero(tablero);
+        
+        // Obtener jugada del jugador actual o CPU
+        if (contraCPU && jugadorActual == JUGADOR_O) {
+            jugadaCPU(tablero, fila, columna);
+        } else {
+            obtenerJugada(tablero, fila, columna, jugadorActual);
+        }
+        
+        // Realizar la jugada
+        realizarJugada(tablero, fila, columna, jugadorActual);
+        
+        // Verificar si hay ganador
+        if (hayGanador(tablero, jugadorActual)) {
+            mostrarTablero(tablero);
+            if (contraCPU && jugadorActual == JUGADOR_O) {
+                cout << "¡La CPU ha ganado!\n";
+            } else {
+                cout << "¡Jugador " << jugadorActual << " ha ganado!\n";
+            }
+            juegoTerminado = true;
+        }
+        // Verificar si hay empate
+        else if (tableroLleno(tablero)) {
+            mostrarTablero(tablero);
+            cout << "¡Empate! El tablero está lleno.\n";
+            juegoTerminado = true;
+        }
+        // Cambiar de jugador
+        else {
+            jugadorActual = (jugadorActual == JUGADOR_X) ? JUGADOR_O : JUGADOR_X;
+        }
+    }
+}
+
+// Función principal
+int main() {
+    int opcion;
+    bool continuar = true;
+    
+    // Inicializar semilla para números aleatorios
+    srand(time(0));
+    
+    while (continuar) {
+        opcion = mostrarMenu();
+        
+        // Limpiar buffer de entrada
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        
+        switch (opcion) {
+            case 1:
+                jugarPartida(false);
+                break;
+            case 2:
+                jugarPartida(true);
+                break;
+            case 3:
+                cout << "\n¡Gracias por jugar! ¡Hasta pronto!\n";
+                continuar = false;
+                break;
+            default:
+                cout << "\nOpción inválida. Intenta de nuevo.\n";
+        }
+    }
+    
+    return 0;
+}
